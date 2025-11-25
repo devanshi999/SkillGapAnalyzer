@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Skill Gap Analyzer — Upload</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root{ --accent:#6c63ff; }
+    body{ background: linear-gradient(180deg,#f6f7ff 0%, #ffffff 60%); min-height:100vh; }
+    .card-auth{ border:0; box-shadow: 0 8px 30px rgba(28,28,70,0.06); border-radius:16px; }
+    .brand{ color:var(--accent); font-weight:700; letter-spacing:0.2px; }
+    .drop-area{ border:2px dashed rgba(108,99,255,0.18); border-radius:12px; padding:20px; text-align:center; transition:background .15s,border-color .15s; }
+    .drop-area.dragover{ background: rgba(108,99,255,0.03); border-color:var(--accent); }
+    .file-info{ font-size:.9rem; }
+    .btn-accent{ background:var(--accent); color:#fff; border:0; }
+    .small-muted{ font-size:.85rem; color:#666; }
+    @media (max-width: 767px){ .card-auth{ border-radius:12px; } }
+  </style>
+</head>
+<body>
+  <pre id="result" style="white-space: pre-wrap; background:#f0f0f0; padding:20px; border-radius:8px;"></pre>
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="card card-auth overflow-hidden">
+          <div class="row g-0 align-items-stretch">
+            <div class="col-md-5 p-4 bg-white d-flex flex-column h-100">
+                  <div class="mb-4">
+                    <h2 class="brand" style="font-weight:700;">Skill Gap Analyzer</h2>
+                    <p class="small-muted" style="font-size:14px;">AI-Powered Skill Gap Analyzer</p>
+                  </div>
+
+                  <div style="
+                      display:flex;
+                      flex-direction:column;
+                      gap:14px;
+                      margin-bottom:26px;
+                  ">
+                    <div style="
+                        background:#fafaff;
+                        border:1px solid #e6e6ff;
+                        padding:14px 16px;
+                        border-radius:12px;
+                    ">
+                      <h6 style="margin:0; font-size:15px; color:#333; font-weight:600;">
+                        🚀 Instant Skill Analysis
+                      </h6>
+                      <p style="margin:4px 0 0; font-size:13px; color:#666;">
+                        Quickly understand how your skills match a target job.
+                      </p>
+                    </div>
+
+                    <div style="
+                        background:#fafaff;
+                        border:1px solid #e6e6ff;
+                        padding:14px 16px;
+                        border-radius:12px;
+                    ">
+                      <h6 style="margin:0; font-size:15px; color:#333; font-weight:600;">
+                        🎯 Highlight Weak & Missing Skills
+                      </h6>
+                      <p style="margin:4px 0 0; font-size:13px; color:#666;">
+                        Clearly see where you need improvement.
+                      </p>
+                    </div>
+
+                    <div style="
+                        background:#fafaff;
+                        border:1px solid #e6e6ff;
+                        padding:14px 16px;
+                        border-radius:12px;
+                    ">
+                      <h6 style="margin:0; font-size:15px; color:#333; font-weight:600;">
+                        📈 Resume Optimization
+                      </h6>
+                      <p style="margin:4px 0 0; font-size:13px; color:#666;">
+                        Make your resume more aligned with job expectations.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style="
+                      background:#f7f7ff;
+                      padding:14px 16px;
+                      border-radius:10px;
+                      border:1px solid #ececff;
+                      margin-bottom:22px;
+                  ">
+                    <h6 style="font-size:14px; font-weight:600; color:#333; margin-bottom:4px;">
+                      Perfect for:
+                    </h6>
+                    <p style="font-size:13px; color:#666; margin:0;">
+                      Students • Freshers • Job Seekers • Internship Applicants
+                    </p>
+                  </div>
+                </div>
+
+            <div class="col-md-7 p-4 bg-light">
+              <h5 class="mb-3">Upload Resume &amp; Job Description</h5>
+
+              <form id="uploadForm" enctype="multipart/form-data">
+                <div class="mb-3">
+                  <label class="form-label">Resume (CV)</label>
+                  <div id="resumeDrop" class="drop-area" tabindex="0" aria-label="Drop resume here or click to select">
+                    <p><i class="fa-regular fa-file-lines fa-2x"></i></p>
+                    <p class="mb-1">Drag &amp; drop your resume here</p>
+                    <p class="small-muted">or <button type="button" id="resumeBrowseBtn" class="btn btn-link p-0 align-baseline">browse files</button></p>
+                    <input id="resumeInput" name="resume" type="file" accept=".pdf,.doc,.docx,.txt" hidden>
+                    <div id="resumeInfo" class="file-info mt-2" aria-live="polite"></div>
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Job Description</label>
+                  <div id="jdDrop" class="drop-area" tabindex="0" aria-label="Drop job description here or click to select">
+                    <p><i class="fa-regular fa-clipboard fa-2x"></i></p>
+                    <p class="mb-1">Drag &amp; drop the job description (JD)</p>
+                    <p class="small-muted">or <button type="button" id="jdBrowseBtn" class="btn btn-link p-0 align-baseline">browse files</button></p>
+                    <input id="jdInput" name="job_description" type="file" accept=".pdf,.doc,.docx,.txt" hidden>
+                    <div id="jdInfo" class="file-info mt-2" aria-live="polite"></div>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2 align-items-center">
+                  <button id="submitBtn" type="submit" class="btn btn-accent">Analyze</button>
+                  <button id="clearBtn" type="button" class="btn btn-outline-secondary">Clear</button>
+                  <small class="ms-2 small-muted">Results will appear after analysis</small>
+                </div>
+
+                <div id="resultBox" class="mt-4" hidden>
+                  <div class="card p-3">
+                    <h6>Preview — what will be sent</h6>
+                    <pre id="payloadPreview" style="white-space:pre-wrap;max-height:220px;overflow:auto;background:#fafafa;padding:8px;border-radius:6px"></pre>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const bytesToKB = b => Math.round((b/1024)*10)/10;
+    const allowedTypes = ['application/pdf','text/plain',
+                          'application/msword',
+                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const maxFileSize = 10 * 1024 * 1024; // 10 MB
+
+    const resumeInput = document.getElementById('resumeInput');
+    const jdInput = document.getElementById('jdInput');
+    const resumeDrop = document.getElementById('resumeDrop');
+    const jdDrop = document.getElementById('jdDrop');
+    const resumeInfo = document.getElementById('resumeInfo');
+    const jdInfo = document.getElementById('jdInfo');
+    const uploadForm = document.getElementById('uploadForm');
+    const payloadPreview = document.getElementById('payloadPreview');
+    const resultBox = document.getElementById('resultBox');
+    const clearBtn = document.getElementById('clearBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    document.getElementById('resumeBrowseBtn').addEventListener('click', ()=> resumeInput.click());
+    document.getElementById('jdBrowseBtn').addEventListener('click', ()=> jdInput.click());
+
+    function showFileInfo(file, targetEl){
+      if(!file) { targetEl.textContent = '' ; return; }
+      const okType = allowedTypes.includes(file.type) || /\.pdf|\.docx?|\.txt$/i.test(file.name);
+      const tooLarge = file.size > maxFileSize;
+      targetEl.innerHTML = `Name: <strong>${file.name}</strong> &nbsp; • &nbsp; ${bytesToKB(file.size)} KB` +
+        (tooLarge ? ` <span class='text-danger'>&nbsp;(Too large)</span>` : '') +
+        (okType ? '' : ` <span class='text-warning'>&nbsp;(Unrecognized type)</span>`);
+    }
+
+    function setupDropArea(dropEl, inputEl, infoEl){
+      ['dragenter','dragover'].forEach(ev => dropEl.addEventListener(ev, (e)=>{ e.preventDefault(); e.stopPropagation(); dropEl.classList.add('dragover'); }));
+      ['dragleave','drop'].forEach(ev => dropEl.addEventListener(ev, (e)=>{ e.preventDefault(); e.stopPropagation(); dropEl.classList.remove('dragover'); }));
+
+      dropEl.addEventListener('drop', (e)=>{
+        const f = e.dataTransfer.files && e.dataTransfer.files[0];
+        if(!f) return;
+        inputEl.files = e.dataTransfer.files; 
+        showFileInfo(f, infoEl);
+      });
+
+      inputEl.addEventListener('change', ()=>{
+        const f = inputEl.files && inputEl.files[0];
+        showFileInfo(f, infoEl);
+      });
+
+      dropEl.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { inputEl.click(); } });
+    }
+
+    setupDropArea(resumeDrop, resumeInput, resumeInfo);
+    setupDropArea(jdDrop, jdInput, jdInfo);
+
+    uploadForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+
+      const resumeFile = resumeInput.files[0];
+      const jdFile = jdInput.files[0];
+
+      if(!resumeFile || !jdFile){
+        alert('Please provide BOTH a resume and a job description.');
+        return;
+      }
+      if(resumeFile.size > maxFileSize || jdFile.size > maxFileSize){
+        alert('One of the files is larger than 10 MB. Please upload smaller files.');
+        return;
+      }
+
+      const payload = {
+        resume: { name: resumeFile.name, sizeKB: bytesToKB(resumeFile.size), type: resumeFile.type || 'unknown' },
+        job_description: { name: jdFile.name, sizeKB: bytesToKB(jdFile.size), type: jdFile.type || 'unknown' },
+        timestamp: new Date().toISOString()
+      };
+
+      payloadPreview.textContent = JSON.stringify(payload, null, 2);
+      resultBox.hidden = false;
+
+      const formData = new FormData();
+formData.append('resume', resumeFile);
+formData.append('job_description', jdFile);
+
+fetch("http://127.0.0.1:8000/analyze", {
+  method: "POST",
+  body: formData
+})
+  .then((response) => response.json())
+  .then((data) => {
+    const formatted = `
+
+🟦 STEP 1: RESUME & JD FILE INFO
+📄 Resume: ${data.metadata.resume_filename}
+📄 Job Description: ${data.metadata.job_description_filename}
+
+🟦 STEP 2: REQUIRED SKILLS FROM JOB DESCRIPTION
+Total Skills Required: ${data.summary.total_required}
+✔ Present: ${data.summary.present}
+⚠ Weak: ${data.summary.weak}
+❌ Missing: ${data.summary.missing}
+📊 Gap Score: ${data.summary.gap_score_percent}%
+
+🟦 STEP 3: SKILL-BY-SKILL COMPARISON
+${data.comparison
+  .map((item) => {
+    return `
+➡ Skill: ${item.skill}
+   ✔ Status: ${item.status.toUpperCase()}
+   🔎 JD Score: ${item.jd_best_score}
+   📘 Resume Score: ${item.resume_best_score}
+   📄 Evidence:
+     ${item.evidence.length ? item.evidence.join("\n     ") : "No evidence found"}
+`;
+  })
+  .join("")}
+`;
+
+localStorage.setItem("analysis_text", formatted);
+localStorage.setItem("analysis_json", JSON.stringify(data));
+window.open("result.html", "_blank");
+
+  })
+  .catch((error) => {
+    console.error(error);
+    alert("Error analyzing files.");
+  });
+
+    });
+
+    clearBtn.addEventListener('click', ()=>{
+      resumeInput.value = '';
+      jdInput.value = '';
+      resumeInfo.textContent = '';
+      jdInfo.textContent = '';
+      payloadPreview.textContent = '';
+      resultBox.hidden = true;
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const email = document.getElementById("inputEmail").value;
+    const password = document.getElementById("inputPassword").value;
+
+    fetch("http://localhost/skill-gap-analyzer-frontend/login.php", {   // ← change folder name if needed
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            alert("Login successful!");
+
+            // Save login
+            localStorage.setItem("logged_in", "yes");
+            localStorage.setItem("user_email", data.email);
+
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => console.error(err));
+});
+
+  </script>
+</body>
+</html>

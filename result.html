@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Skill Gap Report</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
+
+
+<style>
+
+    #pdfContainer {
+        opacity: 0;
+        pointer-events: none;
+        height: auto;
+    }
+
+    .pdf-section {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        -webkit-region-break-inside: avoid;
+        -webkit-column-break-inside: avoid;
+        -moz-column-break-inside: avoid;
+        -region-break-inside: avoid;
+    }
+
+    .pdf-list {
+        page-break-inside: avoid;
+    }
+
+
+  
+
+    body {
+        background: linear-gradient(135deg, #eef2ff, #f8f9ff);
+        font-family: "Inter", sans-serif;
+    }
+
+    .page-title {
+        font-size: 32px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 30px;
+        color: #3b49df;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.75);
+        border-radius: 20px;
+        padding: 25px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0px 8px 20px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+        border: 1px solid rgba(255,255,255,0.5);
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #3949ab;
+    }
+
+    .skill-card {
+        border-radius: 16px;
+        padding: 18px;
+        background: white;
+        border: 1px solid #e5e7ff;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.04);
+        margin-bottom: 18px;
+        transition: transform 0.15s ease;
+    }
+    .skill-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .badge-status {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 12px;
+    }
+
+    .evidence-box {
+        background: #f3f4ff;
+        padding: 10px;
+        border-radius: 10px;
+        white-space: pre-wrap;
+        border-left: 4px solid #4e73df;
+        font-size: 14px;
+    }
+
+</style>
+</head>
+
+<body class="p-4">
+
+<div class="container">
+
+    <h1 class="page-title"><i class="fa-solid fa-chart-line"></i> Skill Gap Analysis</h1>
+
+    <div class="glass-card">
+        <div class="section-title"><i class="fa-solid fa-file-circle-check"></i> File Details</div>
+        <p><b>Resume:</b> <span id="resumeName"></span></p>
+        <p><b>Job Description:</b> <span id="jdName"></span></p>
+    </div>
+
+    <div class="glass-card">
+        <div class="section-title"><i class="fa-solid fa-lightbulb"></i> Summary</div>
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h3 id="total" class="text-primary fw-bold"></h3>
+                <small>Total Required</small>
+            </div>
+            <div class="col-md-3">
+                <h3 id="present" class="text-success fw-bold"></h3>
+                <small>Present</small>
+            </div>
+            <div class="col-md-3">
+                <h3 id="weak" class="text-warning fw-bold"></h3>
+                <small>Weak</small>
+            </div>
+            <div class="col-md-3">
+                <h3 id="missing" class="text-danger fw-bold"></h3>
+                <small>Missing</small>
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <h4 class="fw-bold" id="gap"></h4>
+            <small>Gap Score</small>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="section-title"><i class="fa-solid fa-list-check"></i> Skill-by-Skill Comparison</div>
+        <div id="skillList"></div>
+    </div>
+
+    <div class="text-center mt-4">
+        <button id="downloadPdfBtn" class="btn btn-primary">
+            <i class="fa-solid fa-file-arrow-down"></i> Download PDF
+        </button>
+    </div>
+
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const jsonData = localStorage.getItem("analysis_json");
+
+    if (!jsonData) {
+        document.body.innerHTML = "<h2 class='text-center'>No analysis data found!</h2>";
+        return;
+    }
+
+    const data = JSON.parse(jsonData);
+
+    document.getElementById("resumeName").textContent = data.metadata.resume_filename;
+    document.getElementById("jdName").textContent = data.metadata.job_description_filename;
+
+    document.getElementById("total").textContent = data.summary.total_required;
+    document.getElementById("present").textContent = data.summary.present;
+    document.getElementById("weak").textContent = data.summary.weak;
+    document.getElementById("missing").textContent = data.summary.missing;
+    document.getElementById("gap").textContent = data.summary.gap_score_percent + "%";
+
+    const container = document.getElementById("skillList");
+
+    data.comparison.forEach(item => {
+        let statusClass =
+            item.status === "present" ? "bg-success" :
+            item.status === "weak" ? "bg-warning text-dark" :
+            "bg-danger";
+
+        const card = document.createElement("div");
+        card.className = "skill-card";
+
+        card.innerHTML = `
+            <h5>${item.skill}</h5>
+            <span class="badge badge-status ${statusClass}">
+                ${item.status.toUpperCase()}
+            </span>
+            <p class="mt-2"><b>JD Score:</b> ${item.jd_best_score}</p>
+            <p><b>Resume Score:</b> ${item.resume_best_score}</p>
+
+            <b>Evidence:</b>
+            <div class="evidence-box mt-2">
+                ${item.evidence.length ? item.evidence.join("<br>") : "No evidence found"}
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+
+});
+
+document.getElementById("downloadPdfBtn").addEventListener("click", async () => {
+    console.log("Creating modern PDF...");
+
+    const data = JSON.parse(localStorage.getItem("analysis_json"));
+    if (!data) {
+        alert("No analysis found!");
+        return;
+    }
+
+    // Modern PDF container
+    const pdfDiv = document.createElement("div");
+    pdfDiv.style.width = "800px";
+    pdfDiv.style.padding = "30px";
+    pdfDiv.style.background = "#ffffff";
+    pdfDiv.style.fontFamily = "Inter, sans-serif";
+    pdfDiv.style.color = "#111827";
+    pdfDiv.className = "pdf-root";
+
+    pdfDiv.innerHTML = `
+    <style>
+        .pdf-section { 
+            page-break-inside: avoid; 
+            break-inside: avoid; 
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 15px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+
+        .pdf-header {
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #4A47FF, #6E72F6);
+            color: white;
+            margin-bottom: 25px;
+        }
+
+        .pdf-list {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #374151;
+        }
+    </style>
+
+    <div class="pdf-header">
+        <h1 style="font-weight:900; margin:0; font-size:32px;">Skill Gap Report</h1>
+        <p style="font-size:14px; margin-top:5px;">AI-Generated Job Readiness Summary</p>
+    </div>
+
+    <div class="pdf-section">
+        <h2 style="color:#4A47FF; font-weight:700; font-size: 22px; padding-bottom: 5px;">Summary Overview</h2>
+        <p><b>Total Required:</b> ${data.summary.total_required}</p>
+        <p><b>Present Skills:</b> ${data.summary.present}</p>
+        <p><b>Weak Skills:</b> ${data.summary.weak}</p>
+        <p><b>Missing Skills:</b> ${data.summary.missing}</p>
+    </div>
+
+    <div class="pdf-section">
+        <h2 style="color:#4A47FF; font-weight:700; font-size: 22px; padding-bottom: 5px;">Skill Distribution</h2>
+        <canvas id="pdfChart" width="600" height="260"
+            style="background:#fff; padding:10px; border-radius:10px; border:1px solid #e5e7eb;">
+        </canvas>
+    </div>
+
+    <div class="pdf-section">
+        <h2 style="color:#ef4444; font-weight:700; font-size: 18px;">Missing Skills</h2>
+        <ul class="pdf-list">
+            ${data.comparison.filter(x => x.status === "missing").map(x => `<li>${x.skill}</li>`).join("")}
+        </ul>
+    </div>
+
+    <div class="pdf-section">
+        <h2 style="color:#f59e0b; font-weight:700; font-size: 18px;">Weak Skills</h2>
+        <ul class="pdf-list">
+            ${data.comparison.filter(x => x.status === "weak").map(x => `<li>${x.skill}</li>`).join("")}
+        </ul>
+    </div>
+
+    <div class="pdf-section">
+        <h2 style="color:#10b981; font-weight:700; font-size: 18px;">Present Skills</h2>
+        <ul class="pdf-list">
+            ${data.comparison.filter(x => x.status === "present").map(x => `<li>${x.skill}</li>`).join("")}
+        </ul>
+    </div>
+    `;
+
+    document.body.appendChild(pdfDiv);
+
+    // Generate chart
+    await new Promise(resolve => {
+        const ctx = pdfDiv.querySelector("#pdfChart").getContext("2d");
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: ["Present", "Weak", "Missing"],
+                datasets: [{
+                    label: "Skill Distribution",
+                    data: [data.summary.present, data.summary.weak, data.summary.missing],
+                    backgroundColor: ["#10b981", "#f59e0b", "#ef4444"],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+        setTimeout(resolve, 400);
+    });
+
+    // Export PDF
+    html2pdf()
+        .from(pdfDiv)
+        .set({
+            margin: 10,
+            filename: "Skill_Gap_Report.pdf",
+            html2canvas: {
+                scale: 2,
+                scrollY: 0,
+                useCORS: true
+            },
+            jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+        })
+        .outputPdf("blob")
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank"); 
+            pdfDiv.remove();
+        });
+
+});
+
+
+
+</script>
+
+</body>
+</html>
+
